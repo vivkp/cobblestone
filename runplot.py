@@ -6,7 +6,6 @@ from collections import deque
 from matplotlib import pyplot as plt
 from matplotlib import animation
 from sklearn.ensemble import IsolationForest
-import argparse
 
 
 class AnomalyDetector:
@@ -23,8 +22,8 @@ class AnomalyDetector:
         self.ema_value = 0
         self.ema_std_dev = 0
 
-        self.window_size = window_size 
-        self.contamination = contamination/2
+        self.window_size = window_size
+        self.contamination = contamination
         self.model = None
         self.data_window = []
 
@@ -99,8 +98,9 @@ def simulate_data_stream(num_iterations,anomaly_rate):
         yield current_time, value, is_anomaly
         current_time += 1
 
-def frames(iterations):
-    for time, val, is_anomaly in simulate_data_stream(iterations,anomaly_rate):
+def frames():
+    print(anomaly_rate)
+    for time, val, is_anomaly in simulate_data_stream(500,anomaly_rate):
         yield time, val, is_anomaly
 
 
@@ -115,7 +115,7 @@ def animate(args):
     plt.xlim(max(0, len(x) - 50), len(x))
 
     if max(y) > 500:
-        plt.ylim(0,max(y)+200)
+        plt.ylim(0,max(y))
     
 
     line.set_data(x, y)
@@ -198,19 +198,7 @@ def animate(args):
   
     return line,
 
-
 if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-anomaly_rate', dest='anomaly_rate',default= 0.08, type=float, help='Add anomaly rate')
-    parser.add_argument('-interval', dest='interval', type=int,default = 100, help='Interval to show live data')
-    parser.add_argument('-iterations', dest='iterations', type=int,default =1000, help='Number of time stream data called')
-    
-    args = parser.parse_args()
-    anomaly_rate = args.anomaly_rate
-    interval = args.interval
-    iterations = args.iterations
-
 
 
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -219,7 +207,8 @@ if __name__ == '__main__':
     x = []
     y = []
 
-    
+    anomaly_rate = 0.08
+    interval = 100
 
     detector = AnomalyDetector(window_size=50, threshold_multiplier=3.0,ema_alpha=0.2,contamination = anomaly_rate)
     
@@ -239,7 +228,7 @@ if __name__ == '__main__':
     plt.title("Anomaly Detection on Live Data Stream")
     plt.xlabel("Time")
     plt.ylabel("Values")
-    anim = animation.FuncAnimation(fig, animate, frames=frames(iterations), interval=interval, repeat = False)
+    anim = animation.FuncAnimation(fig, animate, frames=frames, interval=interval, repeat = False)
     plt.show()
     
 
