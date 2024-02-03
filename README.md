@@ -15,7 +15,7 @@ python plot.py ## default --anomaly_rate 0.08 --interval 100 --iterations 1000
 python plot.py --anomaly_rate 0.08 --interval 200 --iterations 500
 ```
 
-For the assignment titled "Efficient Data Stream Anomaly Detection," three algorithms were chosen to address the dynamic nature of continuous data streams:
+For this assignment titled "Efficient Data Stream Anomaly Detection," three algorithms were chosen to address the dynamic nature of continuous data streams:
 
 1. **Moving Average (MA):**
    - **Purpose:** Establish a baseline understanding of overall trend and seasonality in the data, crucial for identifying anomalies.
