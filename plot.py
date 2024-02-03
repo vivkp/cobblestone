@@ -13,27 +13,33 @@ class AnomalyDetector:
     def __init__(self, window_size, threshold_multiplier,ema_alpha,contamination):
         self.window_size = window_size
         self.threshold_multiplier = threshold_multiplier
+
+        # Moving Average (MVA) parameters
         self.mva_data_window = deque(maxlen=window_size)
         self.mva_sum = 0
         self.mva_value = None
         self.mva_std_dev = 0
 
+        # Exponential Moving Average (EMA) parameters
         self.ema_data_window = deque(maxlen=window_size)
         self.ema_alpha = ema_alpha
         self.ema_value = 0
         self.ema_std_dev = 0
 
+        # Isolation Forest parameters
         self.window_size = window_size 
-        self.contamination = contamination/2
+        self.contamination = contamination * window_size/100 # Adjust contamination for Isolation Forest wrt window size
         self.model = None
         self.data_window = []
 
     def update(self,value):
+        # Update MVA, EMA, and Isolation Forest with the new data point
         self.update_mva(value)
         self.update_ema(value)
         self.update_model(value)
 
     def update_mva(self, value):
+         # Update Moving Average (MVA) parameters
         if len(self.mva_data_window) == self.window_size:
             self.mva_sum -= self.mva_data_window.popleft()
 
@@ -44,6 +50,7 @@ class AnomalyDetector:
         self.mva_std_dev = np.std(list(self.mva_data_window))
 
     def update_ema(self, value):
+        # Update Exponential Moving Average (EMA) parameters
         if len(self.ema_data_window) == self.window_size:
             self.ema_data_window.popleft()
 
@@ -53,6 +60,8 @@ class AnomalyDetector:
         self.ema_std_dev = np.std(list(self.ema_data_window))
 
     def update_model(self, value):
+        # Update Isolation Forest model with the new data point
+
         self.data_window.append(value)
 
         if len(self.data_window) > self.window_size:
@@ -65,38 +74,45 @@ class AnomalyDetector:
             self.model.fit(window)
 
     def isof_anomaly(self, value):
+        # Predict anomaly using Isolation Forest
         if self.model is None:
             return 0
         prediction = self.model.predict([[value]])
         return 1 if prediction == -1 else 0
 
     def detect_anomaly(self, value):
+        # Detect anomalies using MVA, EMA, and Isolation Forest
+
         mva_threshold = self.mva_value + self.threshold_multiplier * self.mva_std_dev
         ema_threshold = self.ema_value + self.threshold_multiplier * self.ema_std_dev
         isof_anomaly = self.isof_anomaly(value)
         return (value > mva_threshold , value > ema_threshold , isof_anomaly) 
 
 
-
+#### Function to Generate Live Data Stream , with concept drift and seasonal variation
 def simulate_data_stream(num_iterations,anomaly_rate):
     concept_drift_rate = 0.1
     concept_drift_value = 0
     current_time = 0
+    period = 60
 
     for i in range(num_iterations):
-        seasonal_component = 10 * math.sin(2 * math.pi * current_time / 60)
+        value = 50 ### Constant Value 
+        random_noise = random.uniform(-5, 5)   ### Random Noise
+        seasonal_component = 10 * math.sin(2 * math.pi * current_time / period) ### Seasonal Component with period 60
         concept_drift_value += concept_drift_rate
-        drift_component = max(5, 5 * concept_drift_value)
-        random_noise = random.uniform(-5, 5)
+        drift_component =  5 * concept_drift_value  ### incremental Concept Drift 
+        
+        
 
-        if random.random() < anomaly_rate and i > 50:
+        if random.random() < anomaly_rate and i > 50: #### roduce anomaly depending on the anomaly rate probability , unless the window size is 50 it would not produce anomaly
             value = random.uniform(500, 800) + seasonal_component + drift_component + random_noise
-            is_anomaly = True
+            is_anomaly = True ### variable storing the generated point is anomaly or not
         else:
-            value = 50 + seasonal_component + drift_component + random_noise
+            value = value + seasonal_component + drift_component + random_noise
             is_anomaly = False
 
-        yield current_time, value, is_anomaly
+        yield current_time, value, is_anomaly 
         current_time += 1
 
 def frames(iterations):
@@ -112,8 +128,10 @@ def animate(args):
     x.append(time_val)
     y.append(value)
 
+    #### Showing the latest 50 points on the plot
     plt.xlim(max(0, len(x) - 50), len(x))
 
+    ### Padded y so that anomaly annotation is in the frame
     if max(y) > 500:
         plt.ylim(0,max(y)+200)
     
@@ -193,6 +211,8 @@ def animate(args):
     isof_recall = isof_true_positives / (isof_true_positives + isof_false_negatives) if isof_true_positives + isof_false_negatives > 0 else 0
     isof_f1 = 2 * (isof_precision * isof_recall) / (isof_precision + isof_recall) if isof_precision + isof_recall > 0 else 0
 
+
+    #### printing f1 score , precision , recall for mva , ema and isof respectively
 
     plt.legend(['Data', f'MVA  F1 score: {mva_f1:.3f} Pr: {mva_precision:.3f} Recall - {mva_recall:.3f} ,',f'EMA F1 score: {ema_f1:.3f} Pr: {ema_precision:.3f} Recall: {ema_recall:.3f}',f'ISOF F1 score: {isof_f1:.3f} Pr: {isof_precision:.3f} Recall: {isof_recall:.3f}'], loc='upper right') 
   

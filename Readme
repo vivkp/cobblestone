@@ -1,4 +1,0 @@
-Steps to run
-
-python3 plot.py -anomaly_rate 0.08 -interval 200 -iterations 500
-
