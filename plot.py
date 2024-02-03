@@ -10,7 +10,17 @@ import argparse
 
 
 class AnomalyDetector:
+    """Class for detecting anomalies using Moving Average (MVA), Exponential Moving Average (EMA), and Isolation Forest."""
+
     def __init__(self, window_size, threshold_multiplier,ema_alpha,contamination):
+        """Initialize the AnomalyDetector.
+
+        Args:
+        - window_size (int): Size of the data window for MVA and EMA.
+        - threshold_multiplier (float): Multiplier for threshold in anomaly detection.
+        - ema_alpha (float): Alpha parameter for EMA.
+        - contamination (float): Proportion of outliers in the data for Isolation Forest.
+        """
         self.window_size = window_size
         self.threshold_multiplier = threshold_multiplier
 
@@ -33,13 +43,14 @@ class AnomalyDetector:
         self.data_window = []
 
     def update(self,value):
-        # Update MVA, EMA, and Isolation Forest with the new data point
+        """Update MVA, EMA, and Isolation Forest with the new data point."""
+       
         self.update_mva(value)
         self.update_ema(value)
         self.update_model(value)
 
     def update_mva(self, value):
-         # Update Moving Average (MVA) parameters
+        """ Update Moving Average (MVA) parameters """
         if len(self.mva_data_window) == self.window_size:
             self.mva_sum -= self.mva_data_window.popleft()
 
@@ -50,7 +61,7 @@ class AnomalyDetector:
         self.mva_std_dev = np.std(list(self.mva_data_window))
 
     def update_ema(self, value):
-        # Update Exponential Moving Average (EMA) parameters
+        """Update Exponential Moving Average (EMA) parameters."""
         if len(self.ema_data_window) == self.window_size:
             self.ema_data_window.popleft()
 
@@ -60,7 +71,7 @@ class AnomalyDetector:
         self.ema_std_dev = np.std(list(self.ema_data_window))
 
     def update_model(self, value):
-        # Update Isolation Forest model with the new data point
+        """Update Isolation Forest model with the new data point."""
 
         self.data_window.append(value)
 
@@ -74,14 +85,14 @@ class AnomalyDetector:
             self.model.fit(window)
 
     def isof_anomaly(self, value):
-        # Predict anomaly using Isolation Forest
+        """Predict anomaly using Isolation Forest."""
         if self.model is None:
             return 0
         prediction = self.model.predict([[value]])
         return 1 if prediction == -1 else 0
 
     def detect_anomaly(self, value):
-        # Detect anomalies using MVA, EMA, and Isolation Forest
+        """Detect anomalies using MVA, EMA, and Isolation Forest."""
 
         mva_threshold = self.mva_value + self.threshold_multiplier * self.mva_std_dev
         ema_threshold = self.ema_value + self.threshold_multiplier * self.ema_std_dev
@@ -89,8 +100,10 @@ class AnomalyDetector:
         return (value > mva_threshold , value > ema_threshold , isof_anomaly) 
 
 
-#### Function to Generate Live Data Stream , with concept drift and seasonal variation
+
 def simulate_data_stream(num_iterations,anomaly_rate):
+    """Generate a simulated data stream with concept drift and seasonal variation."""
+   
     concept_drift_rate = 0.1
     concept_drift_value = 0
     current_time = 0
@@ -116,12 +129,16 @@ def simulate_data_stream(num_iterations,anomaly_rate):
         current_time += 1
 
 def frames(iterations):
+    """Generate frames for the animation based on the simulated data stream."""
+   
     for time, val, is_anomaly in simulate_data_stream(iterations,anomaly_rate):
         yield time, val, is_anomaly
 
 
 
 def animate(args):
+    """Animate the data stream and update anomaly detection metrics."""
+    
     global x, y , ema_true_positives, ema_false_negatives, ema_false_positives , mva_true_positives , mva_false_negatives  , mva_false_positives ,  isof_true_positives, isof_false_negatives, isof_false_positives
 
     time_val, value, is_anomaly = args
@@ -170,7 +187,7 @@ def animate(args):
     
     notDetect = True
 
-    if is_anomaly:
+    if is_anomaly: ### plotting the real generated anomaly on the graph 
         plt.scatter(time_val, value, color='red', marker='o', label='Anomaly' if not plt.gca().get_legend() else "")
         notDetect = False
 
@@ -188,10 +205,11 @@ def animate(args):
         anyTrue = True
 
     if anyTrue :
-        if notDetect:
+        if notDetect: ### code to plot the predicted anomaly - False Positive
             plt.scatter(time_val, value, color='blue', marker='*', label='FalseAnomaly' if not plt.gca().get_legend() else "")
 
-        loc = random.randint(5,25)
+        loc = random.randint(5,25) 
+        ### Listing the algorithm that detected the anomaly.
         plt.annotate(anotate, (time_val, value), textcoords="offset points", xytext=(0,loc), ha='center', fontsize=8, color='orange')
 
     ax.relim()
@@ -212,7 +230,7 @@ def animate(args):
     isof_f1 = 2 * (isof_precision * isof_recall) / (isof_precision + isof_recall) if isof_precision + isof_recall > 0 else 0
 
 
-    #### printing f1 score , precision , recall for mva , ema and isof respectively
+    #### printing f1 score , precision , recall for mva , ema and isof respectively on the graph
 
     plt.legend(['Data', f'MVA  F1 score: {mva_f1:.3f} Pr: {mva_precision:.3f} Recall - {mva_recall:.3f} ,',f'EMA F1 score: {ema_f1:.3f} Pr: {ema_precision:.3f} Recall: {ema_recall:.3f}',f'ISOF F1 score: {isof_f1:.3f} Pr: {isof_precision:.3f} Recall: {isof_recall:.3f}'], loc='upper right') 
   
@@ -222,15 +240,25 @@ def animate(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-anomaly_rate', dest='anomaly_rate',default= 0.08, type=float, help='Add anomaly rate')
-    parser.add_argument('-interval', dest='interval', type=int,default = 100, help='Interval to show live data')
-    parser.add_argument('-iterations', dest='iterations', type=int,default =1000, help='Number of time stream data called')
+    parser.add_argument('--anomaly_rate', dest='anomaly_rate',default= 0.08, type=float, help='Add anomaly rate')
+    parser.add_argument('--interval', dest='interval', type=int,default = 100, help='Interval to show live data')
+    parser.add_argument('--iterations', dest='iterations', type=int,default =1000, help='Number of time stream data called')
     
     args = parser.parse_args()
     anomaly_rate = args.anomaly_rate
     interval = args.interval
     iterations = args.iterations
 
+
+    #### Data validation is performed to handle cases of incorrect user input; default values will be used if the provided input is invalid."
+    if interval < 1 :
+        interval = 100
+    
+    if iterations < 1:
+        iterations = 500
+    
+    if anomaly_rate > 1 or anomaly_rate < 0 :
+        anomaly_rate = 0.08
 
 
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -261,7 +289,11 @@ if __name__ == '__main__':
     plt.ylabel("Values")
     anim = animation.FuncAnimation(fig, animate, frames=frames(iterations), interval=interval, repeat = False)
     plt.show()
+    ##### The Red point on the graph shows the real generated anomaly. 
+    #### The Detected followd by mva , ema or isof shows the real anomaly was successfully detected by respective algorithms
+
     
+    #### Below is the code to calculate final f1 score, precision and recall wrt to different algo's used
 
     mva_precision = mva_true_positives / (mva_true_positives + mva_false_positives) if mva_true_positives + mva_false_positives > 0 else 0
     mva_recall = mva_true_positives / (mva_true_positives + mva_false_negatives) if mva_true_positives + mva_false_negatives > 0 else 0
