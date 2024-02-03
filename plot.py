@@ -290,25 +290,4 @@ if __name__ == '__main__':
     anim = animation.FuncAnimation(fig, animate, frames=frames(iterations), interval=interval, repeat = False)
     plt.show()
     ##### The Red point on the graph shows the real generated anomaly. 
-    #### The Detected followd by mva , ema or isof shows the real anomaly was successfully detected by respective algorithms
-
-    
-    #### Below is the code to calculate final f1 score, precision and recall wrt to different algo's used
-
-    mva_precision = mva_true_positives / (mva_true_positives + mva_false_positives) if mva_true_positives + mva_false_positives > 0 else 0
-    mva_recall = mva_true_positives / (mva_true_positives + mva_false_negatives) if mva_true_positives + mva_false_negatives > 0 else 0
-    mva_f1 = 2 * (mva_precision * mva_recall) / (mva_precision + mva_recall) if mva_precision + mva_recall > 0 else 0
-
-
-    ema_precision = ema_true_positives / (ema_true_positives + ema_false_positives) if ema_true_positives + ema_false_positives > 0 else 0
-    ema_recall = ema_true_positives / (ema_true_positives + ema_false_negatives) if ema_true_positives + ema_false_negatives > 0 else 0
-    ema_f1 = 2 * (ema_precision * ema_recall) / (ema_precision + ema_recall) if ema_precision + ema_recall > 0 else 0
-
-    isof_precision = isof_true_positives / (isof_true_positives + isof_false_positives) if isof_true_positives + isof_false_positives > 0 else 0
-    isof_recall = isof_true_positives / (isof_true_positives + isof_false_negatives) if isof_true_positives + isof_false_negatives > 0 else 0
-    isof_f1 = 2 * (isof_precision * isof_recall) / (isof_precision + isof_recall) if isof_precision + isof_recall > 0 else 0
-
-    print(f"Precision : MVA - {mva_precision}  EMA - {ema_precision} ISOF - {isof_precision}")
-    print(f"Recall : MVA - {mva_recall} EMA - {ema_recall} ISOF - {isof_recall}")
-    print(f"F1 Score : MVA - {mva_f1} EMA - {ema_f1} ISOF - {isof_f1}")
-    
+    #### The "Detected" followd by mva , ema or isof shows the real anomaly was successfully detected by respective algorithms
