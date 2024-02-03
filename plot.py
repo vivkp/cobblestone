@@ -290,4 +290,4 @@ if __name__ == '__main__':
     anim = animation.FuncAnimation(fig, animate, frames=frames(iterations), interval=interval, repeat = False)
     plt.show()
     ##### The Red point on the graph shows the real generated anomaly. 
-    #### The "Detected" followd by mva , ema or isof shows the real anomaly was successfully detected by respective algorithms
+    #### The "Detected" followd by mva , ema or isof shows the anomaly is detected by respective algorithms
